@@ -1,36 +1,75 @@
 import { ApolloError } from 'apollo-server-express'
-import Blog from '../models/Blog'
+import User from '../models/User'
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken'
 
 const Query = {
-  findBlog: async (_, args) => {
+  findUser: async (_, args) => {
     try {
-      const blog = await Blog.findById(args.id)
-      return blog
+      const user = await User.findById(args.id)
+      return user
     } catch (err) {
       throw new ApolloError(err)
     }
   },
-  findBlogs: async () => {
+  findUsers: async () => {
     try {
-      return await Blog.find({})
+      return await User.find({})
     } catch (err) {
       throw new ApolloError(err)
     }
   },
+  
 }
 
 const Mutation = {
-  addBlog: async (root, args) => {
+  createUser: async (root, args) => {
     try {
-      // might wants to validate input before creating Blog
-      const newBlog = new Blog({
-        ...args.input,
+      // might wants to validate input before creating User
+      const password = await bcrypt.hash(args.input.password, 8);
+      
+      const newUser = new User({
+        ...args.input, password
       })
-      return await newBlog.save()
+      return await newUser.save()
     } catch (err) {
       throw new ApolloError(err)
     }
   },
+  logIn: async (_, args) => {
+    try {
+      const user = await User.findOne({ email: args.email});
+      if(!user){
+        throw new ApolloError('Unable to find user');
+      }
+
+      const isMatch = await bcrypt.compare(args.password, user.password);
+      if(!isMatch) {
+        throw new ApolloError ('Incorrect password');
+      }
+
+      const token = jwt.sign({userId: user.id}, 'mySecret');
+      return {
+        token,
+        user,
+      }
+    } catch(err) {
+      throw new ApolloError (err)
+    }
+  },
+  updateUser: async (root, args, context) => {
+    try {
+      const Authorization = context.req.get('Authorization');
+      if(!Authorization){
+        throw new ApolloError('Unauthorize connection! Please log in');
+      }
+      const { userId } = jwt.verify(Authorization, 'mySecret');
+      const user = await User.findByIdAndUpdate(userId, {...args.input}, {new: true, runValidators: true});
+      return user;
+    } catch (err) {
+      throw new ApolloError(err);
+    }
+  }
 }
 
 const resolvers = {

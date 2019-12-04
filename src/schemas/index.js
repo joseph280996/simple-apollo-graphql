@@ -8,11 +8,16 @@ const typeDefs = gql`
 
   type Mutation {
     createUser(input: UserInput!): createUserPayload
-    verify(hashValue: String!): AuthPayload
+    verify(hashedValue: String!): AuthPayload
+    login: logInPayload
+  }
+
+  type logInPayload {
+    isSignedIn: Boolean
   }
 
   type createUserPayload {
-    isEmailSent: Boolean
+    isEmailVerified: Boolean
   }
 
   type AuthPayload {

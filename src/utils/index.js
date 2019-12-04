@@ -3,42 +3,28 @@ import fs from 'fs'
 import readline from 'readline'
 import { google } from 'googleapis'
 import Mail from './createMail'
-// If modifying these scopes, delete token.json.
 const SCOPES = [
     'https://www.googleapis.com/auth/gmail.readonly',
     'https://www.googleapis.com/auth/gmail.modify',
     'https://www.googleapis.com/auth/gmail.compose',
     'https://www.googleapis.com/auth/gmail.send',
 ]
-// The file token.json stores the user's access and refresh tokens, and is
-// created automatically when the authorization flow completes for the first
-// time.
 const TOKEN_PATH = 'token.json'
-
-// Load client secrets from a local file.
 const sendMessage = (userEmail, link) => {
     fs.readFile('credentials.json', (err, content) => {
         if (err) {
             return console.log('Error loading client secret file:', err)
         }
 
-        // Authorize the client with credentials, then call the Gmail API.
         authorize(JSON.parse(content), getAuth(userEmail, link))
     })
 }
 
 
-/**
- * Create an OAuth2 client with the given credentials, and then execute the
- * given callback function.
- * @param {Object} credentials The authorization client credentials.
- * @param {function} callback The callback to call with the authorized client.
- */
 function authorize(credentials, callback) {
     const { client_secret, client_id, redirect_uris } = credentials.installed
     const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0])
 
-    // Check if we have previously stored a token.
     fs.readFile(TOKEN_PATH, (err, token) => {
         if (err) {
             return getNewToken(oAuth2Client, callback)
@@ -48,12 +34,6 @@ function authorize(credentials, callback) {
     })
 }
 
-/**
- * Get and store new token after prompting for user authorization, and then
- * execute the given callback with the authorized OAuth2 client.
- * @param {google.auth.OAuth2} oAuth2Client The OAuth2 client to get token for.
- * @param {getEventsCallback} callback The callback for the authorized client.
- */
 
 function getNewToken(oAuth2Client, callback) {
     const authUrl = oAuth2Client.generateAuthUrl({
@@ -82,11 +62,7 @@ function getNewToken(oAuth2Client, callback) {
 
 const getAuth = (userEmail, link) => (auth) => {
     const newEmail = new Mail(auth, userEmail, 'Confirmation Link', link, 'mail')
-
-    // 'mail' is the task, if not passed it will save the message as draft.
-    // attachmentSrc array is optional.
     newEmail.makeBody()
-    // This will send the mail to the recipent.
 }
 
 export default sendMessage;

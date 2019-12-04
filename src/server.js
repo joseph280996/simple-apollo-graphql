@@ -39,9 +39,9 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   // debug: process.env.NODE_ENV === 'DEVELOPMENT',
-  context: (request) => {
-    return { ... request};
-  }
+  context: request => {
+    return { ...request }
+  },
 })
 
 server.applyMiddleware({ app })

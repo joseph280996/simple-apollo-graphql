@@ -23,21 +23,45 @@ const Query = {
 }
 
 const Mutation = {
+  login: async (root, args, context) => {
+    try {
+      const Authorization = context.req.get('Authorization')
+      if (!Authorization) {
+        throw new ApolloError('Unauthorize connection! Please log in')
+      }
+      const { user } = jwt.verify(Authorization, 'mySecret')
+      const dbUser = await User.findOne({ jwtToken: user })
+      if (!dbUser) {
+        throw new ApolloError('Unable to find user')
+      }
+      return {
+        isSignedIn: true,
+      }
+    } catch (err) {
+      throw new ApolloError(err)
+    }
+  },
   createUser: async (root, args) => {
     try {
       // might wants to validate input before creating User
       const { email } = args.input
       const hashedValue = await bcrypt.hash(email, 8)
       const jwtToken = jwt.sign({ email }, 'mySecret', { expiresIn: 60 * 60 })
+      const user = await User.findOne({ hashedValue })
+      if (user) {
+        return {
+          isEmailVerified: user.isEmailVerified,
+        }
+      }
       const newUser = new User({
         hashedValue,
         jwtToken,
         isEmailVerified: false,
       })
       newUser.save()
-      sendMail(email, `http://localhost:3000/${hashedValue}`)
+      sendMail(email, `http://localhost:3000/user/${hashedValue}`)
       return {
-        isEmailSent: true,
+        isEmailVerified: false,
       }
     } catch (err) {
       throw new ApolloError(err)
@@ -45,7 +69,7 @@ const Mutation = {
   },
   verify: async (root, args) => {
     try {
-      const user = await User.findOne({ hashedValue: args.hashValue })
+      const user = await User.findOne({ hashedValue: args.hashedValue })
       if (!user) {
         throw new ApolloError('Unable to find user')
       }
@@ -57,7 +81,6 @@ const Mutation = {
         token,
       }
     } catch (err) {
-      console.log(err)
       if (err.name === 'TokenExpiredError') {
         User.deleteOne({ hashedValue: args.hashValue })
       }

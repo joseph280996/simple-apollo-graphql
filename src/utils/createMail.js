@@ -16,6 +16,7 @@ class CreateMail {
     makeBody() {
         // Mail Body is created.
         const mail = new MailComposer({
+            from: 'do-not-reply <joseph.pham280996@gmail.com>',
             to: this.to,
             text: this.body,
             subject: this.sub,

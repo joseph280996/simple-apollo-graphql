@@ -13,7 +13,7 @@ import typeDefs from './schemas'
 dotenv.config()
 
 // Mongo configuration set up
-const mongoUrl = process.env.MONGO_URL || 'mongodb://localhost:27017/example'
+const mongoUrl = process.env.MONGO_URL || 'mongodb://mongo:27017/example'
 mongoose.set('useNewUrlParser', true)
 mongoose.set('useFindAndModify', false)
 mongoose.set('useCreateIndex', true)

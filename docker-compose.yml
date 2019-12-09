@@ -1,0 +1,59 @@
+version: '3'
+services:
+        mongo:
+                container_name: "mongo"
+                restart: "always"
+                image: "mongo"
+                ports:
+                        - "27017:27017"
+                networks:
+                        - app-network
+        nginx:
+                image: "nginx"
+                container_name: "nginx"
+                restart: "always"
+                ports:
+                        - "80:80"
+                        - "443:443"
+                depends_on:
+                        - nodejs
+                volumes:
+                        - web-root:/var/www/html
+                        - ./conf.d:/etc/nginx/conf.d
+                        - certbot-etc:/etc/letsencrypt
+                        - certbot-var:/var/lib/letsencrypt
+                        - dhparam:/etc/ssl/certs
+                networks:
+                        - app-network
+        nodejs:
+                build: .
+                restart: "always"
+                container_name: "nodejs"
+                networks:
+                        - app-network
+        certbot:
+                image: certbot/certbot
+                container_name: certbot
+                volumes:
+                        - certbot-etc:/etc/letsencrypt
+                        - certbot-var:/var/lib/letsecrypt
+                        - web-root:/var/www/html
+                depends_on:
+                        - nginx
+                command: certonly --webroot --webroot-path=/var/www/html --email joseph.pham280996@gmail.com --agree-tos --no-eff-email --force-renewal -d <Your DNS>
+volumes:
+        certbot-etc:
+        certbot-var:
+        web-root:
+                driver: local
+        dhparam:
+                driver: local
+                driver_opts:
+                        type: none
+                        device:
+                                root/simple-apollo-graphql/dhparam/
+                        o: bind
+networks:
+        app-network:
+                driver: bridge
+

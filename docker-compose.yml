@@ -40,7 +40,7 @@ services:
                         - web-root:/var/www/html
                 depends_on:
                         - nginx
-                command: certonly --webroot --webroot-path=/var/www/html --email joseph.pham280996@gmail.com --agree-tos --no-eff-email --force-renewal -d <Your DNS>
+                command: certonly --webroot --webroot-path=/var/www/html --email joseph.pham280996@gmail.com --agree-tos --no-eff-email --force-renewal -d <Your_DNS>
 volumes:
         certbot-etc:
         certbot-var:
